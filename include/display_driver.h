@@ -58,10 +58,53 @@ protected:
     }
 };
 
+class Touch_CHSC6540_VIEWE : public lgfx::ITouch {
+public:
+    Touch_CHSC6540_VIEWE() {
+        _cfg.i2c_addr = 0x2E;
+        _cfg.x_min = 0;
+        _cfg.x_max = LCD_WIDTH - 1;
+        _cfg.y_min = 0;
+        _cfg.y_max = LCD_HEIGHT - 1;
+    }
+
+    bool init(void) override {
+        _inited = lgfx::i2c::init(_cfg.i2c_port, _cfg.pin_sda, _cfg.pin_scl).has_value();
+        return _inited;
+    }
+
+    void wakeup(void) override {}
+    void sleep(void) override {}
+
+    uint_fast8_t getTouchRaw(lgfx::touch_point_t* tp, uint_fast8_t count) override {
+        if (tp) tp->size = 0;
+        if (!_inited || count == 0) return 0;
+
+        uint8_t buf[15] = {0};
+        uint8_t reg = 0x00;
+
+        auto res = lgfx::i2c::transactionWriteRead(_cfg.i2c_port, _cfg.i2c_addr, &reg, 1, buf, sizeof(buf), _cfg.freq);
+        if (res.has_value()) {
+            uint8_t num = buf[2] & 0x0F;
+            if (num > 0) {
+                uint16_t raw_x = ((buf[3] & 0x0F) << 8) | buf[4];
+                uint16_t raw_y = ((buf[5] & 0x0F) << 8) | buf[6];
+
+                tp[0].size = 1;
+                tp[0].id = 0;
+                tp[0].x = raw_x;
+                tp[0].y = raw_y;
+                return 1;
+            }
+        }
+        return 0;
+    }
+};
+
 class LGFX_VIEWE : public lgfx::LGFX_Device {
     Panel_VIEWE_GC9307     _panel_instance;
     lgfx::Bus_SPI          _bus_instance;
-    lgfx::Touch_CHSC6540   _touch_instance;
+    Touch_CHSC6540_VIEWE   _touch_instance;
 #if (PIN_LCD_BL >= 0)
     lgfx::Light_PWM        _light_instance;
 #endif

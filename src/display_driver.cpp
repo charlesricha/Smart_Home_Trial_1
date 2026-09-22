@@ -4,6 +4,7 @@
  */
 
 #include "display_driver.h"
+#include <Wire.h>
 
 LGFX_VIEWE tft;
 
@@ -134,11 +135,28 @@ bool display_driver_init() {
     pinMode(PIN_TOUCH_SDA, INPUT_PULLUP);
     pinMode(PIN_TOUCH_SCL, INPUT_PULLUP);
 
+    Serial.println("[HAL] Scanning I2C bus on SDA=1, SCL=3...");
+    Wire.begin(PIN_TOUCH_SDA, PIN_TOUCH_SCL);
+    uint8_t count = 0;
+    for (uint8_t addr = 1; addr < 127; addr++) {
+        Wire.beginTransmission(addr);
+        if (Wire.endTransmission() == 0) {
+            Serial.printf("[HAL] I2C device detected at 0x%02X\n", addr);
+            count++;
+        }
+    }
+    if (count == 0) {
+        Serial.println("[HAL] WARNING: No I2C devices detected on SDA=1, SCL=3!");
+    }
+    Wire.end();
+
     Serial.println("[HAL] Initializing LovyanGFX display and touch...");
     if (!tft.init()) {
         Serial.println("[HAL] ERROR: LovyanGFX initialization failed!");
         return false;
     }
+
+    Serial.printf("[HAL] LovyanGFX touch device: %s\n", tft.touch() ? "Registered" : "NONE");
 
     tft.setRotation(0); // Portrait (240x320)
     tft.setBrightness(255);
