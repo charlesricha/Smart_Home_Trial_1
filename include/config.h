@@ -40,9 +40,9 @@
 #define PIN_TOUCH_INT           4
 #define PIN_TOUCH_RST           2
 
-// Screen Dimensions
-#define LCD_WIDTH               240
-#define LCD_HEIGHT              320
+// Screen Dimensions (Landscape)
+#define LCD_WIDTH               320
+#define LCD_HEIGHT              240
 
 // =============================================================================
 // FLOW SENSOR CALIBRATION & SAMPLING

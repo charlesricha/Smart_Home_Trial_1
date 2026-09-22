@@ -39,8 +39,8 @@ LGFX_VIEWE::LGFX_VIEWE() {
         cfg.pin_cs           = PIN_LCD_CS;
         cfg.pin_rst          = PIN_LCD_RST;
         cfg.pin_busy         = -1;
-        cfg.panel_width      = LCD_WIDTH;
-        cfg.panel_height     = LCD_HEIGHT;
+        cfg.panel_width      = 240;
+        cfg.panel_height     = 320;
         cfg.offset_x         = 0;
         cfg.offset_y         = 0;
         cfg.offset_rotation  = 4; // Bit 2 set: LovyanGFX vertical flip (MAD_MY)
@@ -57,9 +57,9 @@ LGFX_VIEWE::LGFX_VIEWE() {
     {
         auto cfg = _touch_instance.config();
         cfg.x_min      = 0;
-        cfg.x_max      = LCD_WIDTH - 1;
+        cfg.x_max      = 239;
         cfg.y_min      = 0;
-        cfg.y_max      = LCD_HEIGHT - 1;
+        cfg.y_max      = 319;
         cfg.pin_int    = -1; // -1 to poll I2C directly without relying on external INT pin
         cfg.pin_rst    = PIN_TOUCH_RST; // GPIO 2
         cfg.bus_shared = false;
@@ -156,9 +156,8 @@ bool display_driver_init() {
         return false;
     }
 
-    Serial.printf("[HAL] LovyanGFX touch device: %s\n", tft.touch() ? "Registered" : "NONE");
-
-    tft.setRotation(0); // Portrait (240x320)
+    tft.setRotation(1); // Landscape (320x240)
+    Serial.printf("[HAL] LovyanGFX configured: %d x %d (Rotation %d)\n", tft.width(), tft.height(), tft.getRotation());
     tft.setBrightness(255);
 
     // Ensure backlight pin is driven HIGH

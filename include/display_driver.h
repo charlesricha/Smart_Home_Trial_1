@@ -16,8 +16,8 @@
 class Panel_VIEWE_GC9307 : public lgfx::Panel_GC9xxx {
 public:
     Panel_VIEWE_GC9307() {
-        _cfg.panel_width  = _cfg.memory_width  = LCD_WIDTH;
-        _cfg.panel_height = _cfg.memory_height = LCD_HEIGHT;
+        _cfg.panel_width  = _cfg.memory_width  = 240;
+        _cfg.panel_height = _cfg.memory_height = 320;
         _cfg.dummy_read_pixel = 16;
         _nop_closing = false;
     }
@@ -63,9 +63,9 @@ public:
     Touch_CHSC6540_VIEWE() {
         _cfg.i2c_addr = 0x2E;
         _cfg.x_min = 0;
-        _cfg.x_max = LCD_WIDTH - 1;
+        _cfg.x_max = 239;
         _cfg.y_min = 0;
-        _cfg.y_max = LCD_HEIGHT - 1;
+        _cfg.y_max = 319;
     }
 
     bool init(void) override {
