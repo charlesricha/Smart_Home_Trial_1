@@ -31,11 +31,21 @@
 ### B. Capacitive Touch (CHSC6540 Controller via I2C)
 | Signal | ESP32-S3 GPIO | Function / Notes |
 | :--- | :---: | :--- |
-| **TOUCH_SDA** | **GPIO 1** | I2C Data (400 kHz) |
-| **TOUCH_SCL** | **GPIO 3** | I2C Clock (400 kHz) |
-| **TOUCH_INT** | **GPIO 4** | Touch Interrupt (Active LOW) |
-| **TOUCH_RST** | **GPIO 2** | Touch Controller Reset |
-| **I2C Address** | **0x2E** | Standard CHSC6540 Address |
+| **TOUCH_SDA** | **GPIO 1** | I2C Data (400 kHz, enable internal pullup) |
+| **TOUCH_SCL** | **GPIO 3** | I2C Clock (400 kHz, enable internal pullup) |
+| **TOUCH_INT** | **GPIO 4** | Touch Interrupt. Set `pin_int = -1` in driver to avoid INT gating |
+| **TOUCH_RST** | **GPIO 2** | Hardware Reset. Must pulse LOW (10ms) -> HIGH (50ms) before init |
+| **I2C Host** | **I2C Port 0** | **Must use `i2c_port = 0`**, not port 1 |
+| **I2C Address** | **0x2E** | Verified active responding address via I2C scan |
+
+> ⚠️ **CRITICAL TOUCH DRIVER REQUIREMENTS:**
+> 1. **Why LovyanGFX `Touch_CHSC6540` Fails:** The stock LovyanGFX driver sends an unsupported command `{0x5A, 0x5A}` and polls register `0x02`. It also aborts reads if `pin_int` is HIGH.
+> 2. **Working Packet Protocol (`Touch_CHSC6540_VIEWE`):**
+>    - Issue a single I2C Write-Read transaction: Write 1 byte (`0x00`), Read 15 bytes.
+>    - `buf[2] & 0x0F`: Number of active touch contacts (0 = released, 1 = pressed).
+>    - `((buf[3] & 0x0F) << 8) | buf[4]`: Raw X coordinate [0 .. 239].
+>    - `((buf[5] & 0x0F) << 8) | buf[6]`: Raw Y coordinate [0 .. 319].
+> 3. **Hardware Reset:** Always toggle `GPIO 2` LOW for 10ms then HIGH for 50ms before initializing the I2C bus to ensure the controller exits low-power shutdown.
 
 ---
 
