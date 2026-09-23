@@ -85,8 +85,8 @@
 // NETWORK & mDNS CONFIGURATION (MILESTONE 1)
 // =============================================================================
 // Set your local WiFi credentials here:
-#define DEFAULT_WIFI_SSID       "WIFI_SSID_HERE"
-#define DEFAULT_WIFI_PASS       "WIFI_PASSWORD_HERE"
+#define DEFAULT_WIFI_SSID       "raspberry"
+#define DEFAULT_WIFI_PASS       "Ashnephy25"
 #define WIFI_CONNECT_TIMEOUT_MS 10000
 
 // Device Hostname for local mDNS (http://smarthome-kitchen.local)
