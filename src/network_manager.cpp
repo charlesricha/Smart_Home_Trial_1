@@ -22,8 +22,8 @@ static const char HTML_DASHBOARD[] PROGMEM = R"rawliteral(
       --card-sub: #0E1420;
       --border: #232F42;
       --border-sub: #1F2B3E;
-      --accent: #2563EB;
-      --accent-glow: #60A5FA;
+      --accent: #F97316;
+      --accent-glow: #FB923C;
       --cyan: #38BDF8;
       --emerald: #10B981;
       --crimson: #EF4444;
@@ -32,6 +32,7 @@ static const char HTML_DASHBOARD[] PROGMEM = R"rawliteral(
       --text: #FFFFFF;
       --text-dim: #94A3B8;
       --text-muted: #64748B;
+
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body {
@@ -96,12 +97,12 @@ static const char HTML_DASHBOARD[] PROGMEM = R"rawliteral(
       align-items: center;
       gap: 6px;
       background: #1E293B;
-      border: 1px solid var(--cyan);
+      border: 1px solid var(--accent);
       border-radius: 999px;
       padding: 3px 12px;
       font-size: 0.8rem;
       font-weight: 600;
-      color: var(--cyan);
+      color: var(--accent);
     }
     .music-status {
       font-size: 0.8rem;
@@ -144,7 +145,7 @@ static const char HTML_DASHBOARD[] PROGMEM = R"rawliteral(
       background: var(--accent);
       border-color: var(--accent-glow);
       padding: 8px 18px;
-      box-shadow: 0 0 12px rgba(37, 99, 235, 0.4);
+      box-shadow: 0 0 14px rgba(249, 115, 22, 0.45);
     }
     .progress-container {
       flex: 1;
@@ -163,7 +164,7 @@ static const char HTML_DASHBOARD[] PROGMEM = R"rawliteral(
     .progress-bar-fill {
       height: 100%;
       width: 25%;
-      background: var(--cyan);
+      background: var(--accent);
       border-radius: 3px;
       transition: width 0.3s;
     }
@@ -320,8 +321,9 @@ static const char HTML_DASHBOARD[] PROGMEM = R"rawliteral(
       background: var(--accent);
       border-color: var(--accent-glow);
       color: #FFFFFF;
-      box-shadow: 0 0 14px rgba(37, 99, 235, 0.4);
+      box-shadow: 0 0 16px rgba(249, 115, 22, 0.45);
     }
+
 
     .alarm-pill {
       display: none;
