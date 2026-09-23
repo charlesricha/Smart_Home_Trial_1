@@ -1,6 +1,6 @@
 # Smart Home System: Project Milestones & Roadmap
 
-**System Codename:** Project Lyra / Nova  
+**System Codename:** Project NORA ("Hey Nora")  
 **Target Hardware:** VIEWE UEDX24320028E-WB-A (ESP32-S3) + Flutter Mobile Companion App  
 **Architecture:** Dual-Core FreeRTOS Firmware + Flutter App + Local Network (mDNS/REST) + Firebase Cloud Sync + Voice Agent  
 
@@ -10,7 +10,7 @@
 
 - [x] **Milestone 0: Hardware Foundation & Core Actuation** *(Completed)*
 - [x] **Milestone 1: ESP32 Local Networking & Direct API** *(Completed)*
-- [ ] **Milestone 2: Mobile App Foundation (Flutter Dashboard)**
+- [x] **Milestone 2: Mobile App Foundation (Flutter Companion App)** *(Completed)*
 - [ ] **Milestone 3: Cloud Synchronization & Multi-Room Scaling (Firebase)**
 - [ ] **Milestone 4: Voice Pipeline (Wake Word + STT + Intent Engine)**
 - [ ] **Milestone 5: Music & Media Streaming Agent**
@@ -45,20 +45,27 @@
 - [x] Implement responsive Dark-Theme Web Dashboard (`GET /`) embedded directly into firmware.
 - [x] Pin NetworkTask to Core 0 (priority 1) to keep Core 1 UI 60 FPS smooth.
 
-
 ---
 
-### Milestone 2: Mobile App Foundation (Flutter Dashboard)
-- [ ] Initialize Flutter project in `mobile_app/`.
-- [ ] Implement Home Screen:
-  - Overall status cards (temperature, humidity, active water flow).
-  - Quick action widgets.
-- [ ] Implement Rooms Screen:
-  - Room cards (Living Room, Kitchen, Dining, Bedroom, Bathroom).
-  - Per-room device lists and toggle switches.
-- [ ] Implement Local Network Discovery / Controller:
-  - Query mDNS / local IP for ESP32 nodes.
-  - Issue direct REST calls over local WiFi for instant Phase 1 control.
+### Milestone 2: Mobile App Foundation (Flutter Companion App) ✅
+- [x] Initialize Flutter project in `mobile_app/`.
+- [x] Implement Master Home Screen (`home_dashboard.dart`):
+  - Digital clock, date, indoor temperature & humidity summary bar.
+  - ESP32 live connection badge (`🟢 Online` / `🔴 Offline`) with IP setup dialog.
+- [x] Implement Block 1: Music Player & Dynamic Speaker Routing (`music_player_card.dart`):
+  - Pill badge tracking active selected room (`🔊 Kitchen`, `🔊 Living Room`, etc.).
+  - Transport controls (Play/Pause, Next, Prev) with animated progress bar.
+- [x] Implement Dynamic Multi-Room Screen Architecture:
+  - **Kitchen** (`kitchen_view.dart`): Valve tap control (`OPEN/CLOSE TAP`), live pulse flow rate, total volume, gas sensor, leak alarms.
+  - **Living Room** (`living_room_view.dart`): Smart blinds, TV power, AC climate temperature slider, ambient lights.
+  - **Bedroom** (`bedroom_view.dart`): Master Sleep Mode, ceiling fan 4-speed selector, curtains, night lamp.
+  - **Dining** (`dining_view.dart`): Chandelier dimmer, mood scene preset, dining room speaker volume.
+  - **Bathroom** (`bathroom_view.dart`): Geyser / water heater temperature control (35°C–65°C), exhaust fan, vanity mirror.
+- [x] Implement Local Network REST Controller (`esp32_service.dart`):
+  - Auto-polls `/api/status` at 1000ms.
+  - Dispatches commands to `/api/valve`.
+- [x] Add NORA Floating Voice Trigger button with voice listening modal simulation.
+
 
 ---
 
