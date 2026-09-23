@@ -82,10 +82,28 @@
 #define SAFETY_LEAK_THRESH_LPM    0.20f  // Trigger leak alarm if flow > 0.20 L/min when CLOSED
 
 // =============================================================================
+// NETWORK & mDNS CONFIGURATION (MILESTONE 1)
+// =============================================================================
+// Set your local WiFi credentials here:
+#define DEFAULT_WIFI_SSID       "WIFI_SSID_HERE"
+#define DEFAULT_WIFI_PASS       "WIFI_PASSWORD_HERE"
+#define WIFI_CONNECT_TIMEOUT_MS 10000
+
+// Device Hostname for local mDNS (http://smarthome-kitchen.local)
+#define DEVICE_HOSTNAME         "smarthome-kitchen"
+#define DEVICE_FRIENDLY_NAME    "Kitchen Water Controller"
+#define DEVICE_ROOM             "Kitchen"
+
+// SoftAP fallback if WiFi is not connected
+#define AP_SSID_PREFIX          "SmartHome-Node-"
+#define AP_DEFAULT_PASS         "12345678"
+
+// =============================================================================
 // FREERTOS TASK ALLOCATION (ESP32-S3 DUAL CORE)
 // =============================================================================
 #define CORE_UI                 1        // Core 1: LVGL rendering & touch handling
 #define CORE_CONTROL            0        // Core 0: Flow sensor ISR processing, servo, safety supervisor
+#define CORE_NETWORK            0        // Core 0: WiFi, mDNS, REST API webserver
 
 #define UI_TASK_STACK_SIZE      8192
 #define UI_TASK_PRIORITY        2
@@ -93,4 +111,8 @@
 #define CONTROL_TASK_STACK_SIZE 4096
 #define CONTROL_TASK_PRIORITY   3
 
+#define NETWORK_TASK_STACK_SIZE 6144
+#define NETWORK_TASK_PRIORITY   1
+
 #define UI_REFRESH_PERIOD_MS    5        // 5ms LVGL timer loop
+

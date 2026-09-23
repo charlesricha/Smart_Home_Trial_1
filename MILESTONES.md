@@ -9,7 +9,7 @@
 ## 🎯 Progress Dashboard
 
 - [x] **Milestone 0: Hardware Foundation & Core Actuation** *(Completed)*
-- [ ] **Milestone 1: ESP32 Local Networking & Direct API**
+- [x] **Milestone 1: ESP32 Local Networking & Direct API** *(Completed)*
 - [ ] **Milestone 2: Mobile App Foundation (Flutter Dashboard)**
 - [ ] **Milestone 3: Cloud Synchronization & Multi-Room Scaling (Firebase)**
 - [ ] **Milestone 4: Voice Pipeline (Wake Word + STT + Intent Engine)**
@@ -32,14 +32,19 @@
 
 ---
 
-### Milestone 1: ESP32 Local Networking & Direct API
-- [ ] Connect ESP32 to local WiFi (`WiFiMulti` or fallback AP mode).
-- [ ] Set up mDNS responder (`esp32-node.local` / `smart-valve.local`) to eliminate hardcoded IPs.
-- [ ] Implement REST API endpoints:
-  - `GET /api/status`: Returns JSON with telemetry (valve state, flow rate, volume, temp).
-  - `POST /api/valve`: Body `{"state": "open" | "close"}` to actuate servo.
-- [ ] Implement WebSocket or SSE (Server-Sent Events) for real-time telemetry streaming.
-- [ ] Verify local API control using curl / Postman.
+### Milestone 1: ESP32 Local Networking & Direct API ✅
+- [x] Connect ESP32 to local WiFi with automatic SoftAP fallback mode.
+- [x] Set up mDNS responder (`http://smarthome-kitchen.local`) to eliminate hardcoded IPs.
+- [x] Implement REST API endpoints:
+  - `GET /api/status`: Returns JSON with telemetry (valve state, flow rate, volume, alarms, uptime, RSSI).
+  - `GET /api/valve` and `POST /api/valve`: Query param or JSON body `{"state": "open" | "close" | "toggle"}` to actuate servo via thread-safe FreeRTOS `control_queue`.
+  - `POST /api/alarm/reset`: Clears active safety alarms.
+  - `POST /api/volume/reset`: Resets session/total flow counter.
+  - `GET /api/device`: Node registration and capability discovery.
+  - `GET /api/ping`: Fast health check.
+- [x] Implement responsive Dark-Theme Web Dashboard (`GET /`) embedded directly into firmware.
+- [x] Pin NetworkTask to Core 0 (priority 1) to keep Core 1 UI 60 FPS smooth.
+
 
 ---
 

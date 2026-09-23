@@ -17,6 +17,7 @@
 #include "valve_controller.h"
 #include "safety_supervisor.h"
 #include "ui_manager.h"
+#include "network_manager.h"
 
 // FreeRTOS Synchronization Primitives
 QueueHandle_t control_queue = nullptr;
@@ -26,6 +27,8 @@ static SystemTelemetry shared_telemetry;
 // Task Handles
 static TaskHandle_t controlTaskHandle = nullptr;
 static TaskHandle_t uiTaskHandle = nullptr;
+static TaskHandle_t networkTaskHandle = nullptr;
+
 
 // =============================================================================
 // CONTROL TASK (CORE 0): Real-Time Sensors, Servo & Safety Supervisor
@@ -145,6 +148,22 @@ void ui_task_func(void* pvParameters) {
 }
 
 // =============================================================================
+// NETWORK TASK (CORE 0): WiFi, mDNS Responder & REST WebServer
+// =============================================================================
+void network_task_func(void* pvParameters) {
+    Serial.printf("[SYSTEM] Network Task running on Core %d (Priority %d)\n",
+                  xPortGetCoreID(), uxTaskPriorityGet(NULL));
+
+    // Initialize Network Engine with Queue and Telemetry pointers
+    networkManager.begin(control_queue, telemetry_mutex, &shared_telemetry);
+
+    for (;;) {
+        networkManager.update();
+        vTaskDelay(pdMS_TO_TICKS(10)); // 100 Hz network polling
+    }
+}
+
+// =============================================================================
 // SETUP & INITIALIZATION
 // =============================================================================
 void setup() {
@@ -199,6 +218,16 @@ void setup() {
         UI_TASK_PRIORITY,
         &uiTaskHandle,
         CORE_UI // Core 1
+    );
+
+    xTaskCreatePinnedToCore(
+        network_task_func,
+        "NetworkTask",
+        NETWORK_TASK_STACK_SIZE,
+        NULL,
+        NETWORK_TASK_PRIORITY,
+        &networkTaskHandle,
+        CORE_NETWORK // Core 0
     );
 
     Serial.println("[SYSTEM] All tasks spawned. System operational.");
