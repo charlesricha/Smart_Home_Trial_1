@@ -46,7 +46,10 @@ struct SystemTelemetry {
     float total_volume_l;       // Lifetime persistent volume (Liters)
     uint32_t session_duration_s;// Seconds valve has been continuously flowing
     bool is_flowing;            // True if pulses are actively occurring
+    uint32_t raw_pulse_count;   // Total raw hardware ISR pulses (for diagnostics)
+    uint8_t pin_level;          // Current digital state of flow pin (0 or 1)
     uint32_t uptime_s;          // System uptime in seconds
     uint32_t free_heap;         // Free heap memory in bytes
     uint32_t free_psram;        // Free PSRAM in bytes
 };
+

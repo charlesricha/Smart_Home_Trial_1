@@ -7,166 +7,589 @@
 
 NetworkManager networkManager;
 
-// Embedded Responsive Dark Theme Dashboard
+// Embedded Full-Screen Exact-Replica Dashboard (Mirrors ESP32 Landscape UI)
 static const char HTML_DASHBOARD[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Home - Water Controller</title>
+  <title>Smart Home - Dashboard</title>
   <style>
     :root {
       --bg: #0B0F19;
       --card: #141C2B;
+      --card-sub: #0E1420;
       --border: #232F42;
+      --border-sub: #1F2B3E;
       --accent: #2563EB;
-      --accent-glow: #38BDF8;
-      --text: #F8FAFC;
-      --text-dim: #94A3B8;
+      --accent-glow: #60A5FA;
+      --cyan: #38BDF8;
       --emerald: #10B981;
       --crimson: #EF4444;
       --amber: #F59E0B;
+      --orange: #FB923C;
+      --text: #FFFFFF;
+      --text-dim: #94A3B8;
+      --text-muted: #64748B;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); padding: 16px; display: flex; justify-content: center; }
-    .container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 14px; }
-    .header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
-    .header h1 { font-size: 1.1rem; font-weight: 600; }
-    .badge { font-size: 0.75rem; padding: 4px 8px; border-radius: 999px; background: #1E293B; border: 1px solid var(--accent-glow); color: var(--accent-glow); font-weight: 500; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-    .valve-hero { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-    .valve-icon { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 12px; border: 2px solid var(--border); transition: all 0.3s; }
-    .valve-open { background: rgba(16, 185, 129, 0.15); border-color: var(--emerald); color: var(--emerald); box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
-    .valve-closed { background: rgba(239, 68, 68, 0.15); border-color: var(--crimson); color: var(--crimson); box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); }
-    .status-text { font-size: 1.4rem; font-weight: 700; letter-spacing: 0.05em; }
-    .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
-    button { padding: 14px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.1s, opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    button:active { transform: scale(0.97); }
-    .btn-open { background: var(--emerald); color: white; }
-    .btn-close { background: var(--crimson); color: white; }
-    .btn-reset { background: #334155; color: var(--text); padding: 10px; font-size: 0.85rem; border: 1px solid var(--border); }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .stat-box { background: #0E1420; border: 1px solid #1F2B3E; border-radius: 8px; padding: 12px; }
-    .stat-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; font-weight: 600; }
-    .stat-val { font-size: 1.3rem; font-weight: 700; color: #FFF; margin-top: 4px; }
-    .alarm-banner { display: none; background: rgba(245, 158, 11, 0.2); border: 1px solid var(--amber); color: var(--amber); border-radius: 8px; padding: 10px; font-size: 0.85rem; text-align: center; font-weight: 600; }
-    .footer { font-size: 0.75rem; color: var(--text-dim); text-align: center; margin-top: 8px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+    .dashboard-wrapper {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.85rem;
+    }
+    .top-bar span { color: var(--text-dim); }
+    .top-bar strong { color: var(--cyan); }
+    
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 2.3fr 1fr;
+      gap: 14px;
+      width: 100%;
+    }
+    @media (max-width: 768px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
+    .left-col {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      position: relative;
+    }
+
+    /* BLOCK 1: Music Player */
+    .music-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .speaker-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1E293B;
+      border: 1px solid var(--cyan);
+      border-radius: 999px;
+      padding: 3px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--cyan);
+    }
+    .music-status {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--emerald);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .track-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #FFF;
+      margin-top: 14px;
+      letter-spacing: -0.02em;
+    }
+    .track-artist {
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      margin-top: 2px;
+      margin-bottom: 16px;
+    }
+    .music-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .ctrl-btn {
+      background: #1E293B;
+      border: 1px solid #334155;
+      color: #FFF;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .ctrl-btn:hover { background: #334155; }
+    .ctrl-play {
+      background: var(--accent);
+      border-color: var(--accent-glow);
+      padding: 8px 18px;
+      box-shadow: 0 0 12px rgba(37, 99, 235, 0.4);
+    }
+    .progress-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .progress-bar-bg {
+      flex: 1;
+      height: 6px;
+      background: #334155;
+      border-radius: 3px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 25%;
+      background: var(--cyan);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+    .time-readout {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* BLOCK 2: Climate, Clock & Water Node */
+    .clock-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .clock-time {
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+    .clock-ampm {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+    .clock-date {
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      margin-left: auto;
+    }
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 16px;
+    }
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 600px) {
+      .telemetry-grid { grid-template-columns: 1fr 1fr; }
+    }
+    .sub-card {
+      background: var(--card-sub);
+      border: 1px solid var(--border-sub);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .sub-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .sub-val {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-top: 4px;
+      color: #FFF;
+    }
+    .sub-badge {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+      display: block;
+    }
+
+    .valve-action-box {
+      background: rgba(14, 20, 32, 0.7);
+      border: 1px solid var(--border-sub);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    @media (max-width: 600px) {
+      .valve-action-box { flex-direction: column; align-items: stretch; }
+    }
+    .valve-status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .status-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--crimson);
+      box-shadow: 0 0 10px var(--crimson);
+      transition: all 0.3s;
+    }
+    .valve-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .valve-btn-group {
+      display: flex;
+      gap: 10px;
+    }
+    .action-btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    .action-btn:active { transform: scale(0.96); }
+    .btn-open { background: var(--emerald); color: white; box-shadow: 0 0 12px rgba(16, 185, 129, 0.3); }
+    .btn-close { background: var(--crimson); color: white; box-shadow: 0 0 12px rgba(239, 68, 68, 0.3); }
+
+    /* BLOCK 3: Rooms Column */
+    .rooms-card {
+      display: flex;
+      flex-direction: column;
+    }
+    .rooms-header {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.15em;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .rooms-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+    .room-btn {
+      background: #1E293B;
+      border: 1px solid #334155;
+      color: #CBD5E1;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .room-btn:hover { background: #2A384C; color: #FFF; }
+    .room-btn.active {
+      background: var(--accent);
+      border-color: var(--accent-glow);
+      color: #FFFFFF;
+      box-shadow: 0 0 14px rgba(37, 99, 235, 0.4);
+    }
+
+    .alarm-pill {
+      display: none;
+      background: rgba(245, 158, 11, 0.2);
+      border: 1px solid var(--amber);
+      color: var(--amber);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 12px;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div>
-        <h1 id="device-title">Smart Home Node</h1>
-        <div style="font-size:0.75rem; color:var(--text-dim);" id="network-info">Connecting...</div>
-      </div>
-      <div class="badge" id="room-tag">Kitchen</div>
+  <div class="dashboard-wrapper">
+    <div class="top-bar">
+      <div>Project Lyra / Nova • <strong>ESP32-S3 Node</strong></div>
+      <div id="net-badge"><span>IP:</span> <strong id="ip-val">Connecting...</strong> | <span>Signal:</span> <strong id="rssi-val">-</strong></div>
     </div>
 
-    <div id="alarm-box" class="alarm-banner">⚠️ SAFETY ALARM ACTIVE</div>
+    <div id="alarm-box" class="alarm-pill">⚠️ ALARM TRIGGERED</div>
 
-    <div class="card valve-hero">
-      <div id="valve-icon" class="valve-icon valve-closed">💧</div>
-      <div id="valve-status" class="status-text" style="color:var(--crimson);">VALVE CLOSED</div>
-      <div style="font-size:0.85rem; color:var(--text-dim); margin-top:4px;" id="flow-indicator">Idle</div>
+    <div class="dashboard-grid">
+      <!-- LEFT COLUMN -->
+      <div class="left-col">
+        <!-- BLOCK 1: Music Player -->
+        <div class="card">
+          <div class="music-header">
+            <div class="speaker-pill">
+              <span>🔊</span> <span id="active-speaker-name">Living Room</span>
+            </div>
+            <div id="music-status" class="music-status">
+              <span>▶</span> <span id="status-text">Playing</span>
+            </div>
+          </div>
 
-      <div class="btn-group" style="width:100%;">
-        <button class="btn-open" onclick="sendValveCmd('open')">▶ OPEN TAP</button>
-        <button class="btn-close" onclick="sendValveCmd('close')">■ CLOSE TAP</button>
-      </div>
-    </div>
+          <div id="track-title" class="track-title">Blinding Lights</div>
+          <div id="track-artist" class="track-artist">The Weeknd</div>
 
-    <div class="card">
-      <div class="stat-label">Live Flow Telemetry</div>
-      <div class="grid-2">
-        <div class="stat-box">
-          <div class="stat-label">Flow Rate</div>
-          <div class="stat-val" id="flow-rate">0.0 L/m</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label">Session Vol</div>
-          <div class="stat-val" id="session-vol">0.00 L</div>
-        </div>
-      </div>
-      <div class="grid-2">
-        <div class="stat-box">
-          <div class="stat-label">Total Lifetime</div>
-          <div class="stat-val" id="total-vol">0.00 L</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label">Uptime</div>
-          <div class="stat-val" id="uptime">0s</div>
-        </div>
-      </div>
-      <div style="display:flex; gap:8px; margin-top:6px;">
-        <button class="btn-reset" style="flex:1;" onclick="resetAlarm()">Reset Alarm</button>
-        <button class="btn-reset" style="flex:1;" onclick="resetVolume()">Reset Volume</button>
-      </div>
-    </div>
+          <div class="music-controls">
+            <button class="ctrl-btn" onclick="prevTrack()">⏮</button>
+            <button id="play-pause-btn" class="ctrl-btn ctrl-play" onclick="togglePlayPause()">⏸</button>
+            <button class="ctrl-btn" onclick="nextTrack()">⏭</button>
 
-    <div class="footer">
-      API: <code>POST /api/valve</code> | mDNS: <code>smarthome-kitchen.local</code>
+            <div class="progress-container">
+              <div class="progress-bar-bg" onclick="seekTrack(event)">
+                <div id="progress-fill" class="progress-bar-fill"></div>
+              </div>
+              <div id="time-pos" class="time-readout">0:45</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BLOCK 2: Time, Climate & Water Node -->
+        <div class="card">
+          <div class="clock-row">
+            <div id="clock-digits" class="clock-time">10:45</div>
+            <div id="clock-ampm" class="clock-ampm">AM</div>
+            <div id="clock-date" class="clock-date">Wed, 23 Sep</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="telemetry-grid">
+            <div class="sub-card">
+              <div class="sub-label" style="color:var(--orange);">TEMP</div>
+              <div class="sub-val" id="temp-val">24.5 °C</div>
+              <span class="sub-badge">Indoor Sensor</span>
+            </div>
+            <div class="sub-card">
+              <div class="sub-label" style="color:var(--cyan);">💧 HUMID</div>
+              <div class="sub-val" id="humid-val">58 %</div>
+              <span class="sub-badge">Relative</span>
+            </div>
+            <div class="sub-card">
+              <div class="sub-label" style="color:var(--cyan);">🌊 FLOW RATE</div>
+              <div class="sub-val" id="flow-rate-val">0.0 L/m</div>
+              <span class="sub-badge" id="flow-diag">Pulses: 0 • Pin: 1</span>
+            </div>
+            <div class="sub-card">
+              <div class="sub-label" style="color:var(--emerald);">💧 TOTAL VOL</div>
+              <div class="sub-val" id="total-vol-val">0.00 L</div>
+              <span class="sub-badge">NVS Persistent</span>
+            </div>
+          </div>
+
+          <!-- Valve Control Section -->
+          <div class="valve-action-box">
+            <div class="valve-status-indicator">
+              <div id="status-dot" class="status-dot"></div>
+              <div>
+                <div id="valve-label" class="valve-title" style="color:var(--crimson);">VALVE: CLOSED</div>
+                <div id="flow-subtext" style="font-size:0.75rem; color:var(--text-muted);">Idle • No water movement</div>
+              </div>
+            </div>
+            <div class="valve-btn-group">
+              <button class="action-btn btn-open" onclick="sendValveCmd('open')">▶ OPEN TAP</button>
+              <button class="action-btn btn-close" onclick="sendValveCmd('close')">■ CLOSE TAP</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: BLOCK 3: Rooms Menu -->
+      <div class="card rooms-card">
+        <div class="rooms-header">ROOMS</div>
+        <div class="rooms-list">
+          <button class="room-btn active" onclick="selectRoom(0, 'Living Room')">Living Room</button>
+          <button class="room-btn" onclick="selectRoom(1, 'Kitchen')">Kitchen</button>
+          <button class="room-btn" onclick="selectRoom(2, 'Dining')">Dining</button>
+          <button class="room-btn" onclick="selectRoom(3, 'Bedroom')">Bedroom</button>
+          <button class="room-btn" onclick="selectRoom(4, 'Bathroom')">Bathroom</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    async function updateData() {
+    const PLAYLIST = [
+      { title: "Blinding Lights", artist: "The Weeknd", duration: 200 },
+      { title: "As It Was", artist: "Harry Styles", duration: 167 },
+      { title: "Levitating", artist: "Dua Lipa", duration: 203 },
+      { title: "Shape of You", artist: "Ed Sheeran", duration: 233 }
+    ];
+    let currentTrackIdx = 0;
+    let isPlaying = true;
+    let elapsedSec = 45;
+
+    function updateTrackUI() {
+      const t = PLAYLIST[currentTrackIdx];
+      document.getElementById('track-title').textContent = t.title;
+      document.getElementById('track-artist').textContent = t.artist;
+      const pct = (elapsedSec / t.duration) * 100;
+      document.getElementById('progress-fill').style.width = pct + '%';
+      const m = Math.floor(elapsedSec / 60);
+      const s = String(elapsedSec % 60).padStart(2, '0');
+      document.getElementById('time-pos').textContent = m + ':' + s;
+    }
+
+    function togglePlayPause() {
+      isPlaying = !isPlaying;
+      const btn = document.getElementById('play-pause-btn');
+      const st = document.getElementById('music-status');
+      if (isPlaying) {
+        btn.textContent = '⏸';
+        st.innerHTML = '<span>▶</span> Playing';
+        st.style.color = 'var(--emerald)';
+      } else {
+        btn.textContent = '▶';
+        st.innerHTML = '<span>⏸</span> Paused';
+        st.style.color = 'var(--text-muted)';
+      }
+    }
+
+    function nextTrack() {
+      currentTrackIdx = (currentTrackIdx + 1) % PLAYLIST.length;
+      elapsedSec = 0;
+      updateTrackUI();
+    }
+
+    function prevTrack() {
+      currentTrackIdx = (currentTrackIdx === 0) ? PLAYLIST.length - 1 : currentTrackIdx - 1;
+      elapsedSec = 0;
+      updateTrackUI();
+    }
+
+    // Music progress ticker
+    setInterval(() => {
+      if (isPlaying) {
+        elapsedSec++;
+        if (elapsedSec >= PLAYLIST[currentTrackIdx].duration) {
+          nextTrack();
+        } else {
+          updateTrackUI();
+        }
+      }
+    }, 1000);
+
+    // Live Clock Ticker
+    function updateClock() {
+      const now = new Date();
+      let hours = now.getHours();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      const mins = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('clock-digits').textContent = `${hours}:${mins}`;
+      document.getElementById('clock-ampm').textContent = ampm;
+      const options = { weekday: 'short', day: 'numeric', month: 'short' };
+      document.getElementById('clock-date').textContent = now.toLocaleDateString('en-US', options);
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Rooms Selection
+    function selectRoom(idx, name) {
+      const btns = document.querySelectorAll('.room-btn');
+      btns.forEach((b, i) => {
+        b.className = (i === idx) ? 'room-btn active' : 'room-btn';
+      });
+      document.getElementById('active-speaker-name').textContent = name;
+    }
+
+    // Real-Time ESP32 Telemetry Polling
+    async function fetchStatus() {
       try {
         const res = await fetch('/api/status');
         const data = await res.json();
-        
-        const isClosed = data.valve.state === 'CLOSED';
+
+        // Valve & Water
+        const isOpen = data.valve.state === 'OPEN';
         const isFlowing = data.telemetry.is_flowing;
-        
-        document.getElementById('valve-status').textContent = 'VALVE: ' + data.valve.state;
-        document.getElementById('valve-status').style.color = isClosed ? 'var(--crimson)' : 'var(--emerald)';
-        
-        const icon = document.getElementById('valve-icon');
-        icon.className = 'valve-icon ' + (isClosed ? 'valve-closed' : 'valve-open');
-        icon.textContent = isFlowing ? '🌊' : '💧';
-        
-        document.getElementById('flow-indicator').textContent = isFlowing ? 'Water actively flowing...' : 'No flow detected';
-        document.getElementById('flow-rate').textContent = data.telemetry.flow_rate_lpm.toFixed(1) + ' L/m';
-        document.getElementById('session-vol').textContent = data.telemetry.session_volume_l.toFixed(2) + ' L';
-        document.getElementById('total-vol').textContent = data.telemetry.total_volume_l.toFixed(2) + ' L';
-        document.getElementById('uptime').textContent = data.system.uptime_s + 's';
-        
+        const vLabel = document.getElementById('valve-label');
+        const dot = document.getElementById('status-dot');
+        const sub = document.getElementById('flow-subtext');
+
+        if (isOpen) {
+          vLabel.textContent = 'VALVE: OPEN';
+          vLabel.style.color = 'var(--emerald)';
+          dot.style.background = 'var(--emerald)';
+          dot.style.boxShadow = '0 0 10px var(--emerald)';
+        } else {
+          vLabel.textContent = 'VALVE: CLOSED';
+          vLabel.style.color = 'var(--crimson)';
+          dot.style.background = 'var(--crimson)';
+          dot.style.boxShadow = '0 0 10px var(--crimson)';
+        }
+
+        sub.textContent = isFlowing ? 'Water actively flowing!' : 'Idle • No water movement';
+        document.getElementById('flow-rate-val').textContent = data.telemetry.flow_rate_lpm.toFixed(1) + ' L/m';
+        document.getElementById('total-vol-val').textContent = data.telemetry.total_volume_l.toFixed(2) + ' L';
+
+        // Diagnostics
+        const pulses = data.telemetry.raw_pulses !== undefined ? data.telemetry.raw_pulses : 0;
+        const pin = data.telemetry.pin_level !== undefined ? data.telemetry.pin_level : '-';
+        document.getElementById('flow-diag').textContent = `Pulses: ${pulses} • Pin: ${pin}`;
+
+        // Alarms
         const alarmBox = document.getElementById('alarm-box');
-        if (data.alarm.code !== 0) {
+        if (data.alarm && data.alarm.code !== 0) {
           alarmBox.style.display = 'block';
           alarmBox.textContent = '⚠️ ALARM: ' + data.alarm.status;
         } else {
           alarmBox.style.display = 'none';
         }
-        
-        document.getElementById('network-info').textContent = 'IP: ' + data.system.ip + ' | RSSI: ' + data.system.wifi_rssi + ' dBm';
+
+        // Network
+        document.getElementById('ip-val').textContent = data.system.ip;
+        document.getElementById('rssi-val').textContent = data.system.wifi_rssi + ' dBm';
       } catch (e) {
-        console.error('Fetch error:', e);
+        console.warn('Status poll error:', e);
       }
     }
 
-    async function sendValveCmd(action) {
-      await fetch('/api/valve?state=' + action, { method: 'POST' });
-      setTimeout(updateData, 200);
-    }
-    
-    async function resetAlarm() {
-      await fetch('/api/alarm/reset', { method: 'POST' });
-      setTimeout(updateData, 200);
+    async function sendValveCmd(cmd) {
+      await fetch('/api/valve?state=' + cmd, { method: 'POST' });
+      setTimeout(fetchStatus, 200);
     }
 
-    async function resetVolume() {
-      await fetch('/api/volume/reset', { method: 'POST' });
-      setTimeout(updateData, 200);
-    }
-
-    setInterval(updateData, 1000);
-    updateData();
+    setInterval(fetchStatus, 1000);
+    fetchStatus();
+    updateTrackUI();
   </script>
 </body>
 </html>
 )rawliteral";
+
 
 NetworkManager::NetworkManager()
     : _server(80),
@@ -356,6 +779,9 @@ void NetworkManager::handleStatus() {
     t["total_volume_l"] = ((int)(tel.total_volume_l * 100)) / 100.0f;
     t["session_duration_s"] = tel.session_duration_s;
     t["is_flowing"] = tel.is_flowing;
+    t["raw_pulses"] = tel.raw_pulse_count;
+    t["pin_level"] = tel.pin_level;
+
 
     // Alarm section
     JsonObject a = doc.createNestedObject("alarm");

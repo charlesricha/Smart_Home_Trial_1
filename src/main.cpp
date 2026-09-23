@@ -95,6 +95,8 @@ void control_task_func(void* pvParameters) {
             shared_telemetry.total_volume_l = flowSensor.getTotalVolume();
             shared_telemetry.session_duration_s = flowSensor.getSessionDurationSec();
             shared_telemetry.is_flowing = flowSensor.isFlowing();
+            shared_telemetry.raw_pulse_count = flowSensor.getRawPulseCount();
+            shared_telemetry.pin_level = flowSensor.getPinLevel();
             shared_telemetry.uptime_s = now_ms / 1000;
             shared_telemetry.free_heap = esp_get_free_heap_size();
             shared_telemetry.free_psram = ESP.getFreePsram();
@@ -104,12 +106,13 @@ void control_task_func(void* pvParameters) {
         // 6. Periodic Serial Diagnostics (every 2000 ms)
         if (now_ms - last_log_ms >= 2000) {
             last_log_ms = now_ms;
-            Serial.printf("[DIAG] Valve: %s | Flow: %5.2f L/min | Tot: %6.2f L | Alarm: %d | Heap: %u\n",
+            Serial.printf("[DIAG] Valve: %s | Flow: %5.2f L/min | Tot: %6.2f L | Pulses: %u | Pin%d: %d\n",
                           valveController.isOpen() ? "OPEN " : "CLOSE",
                           flowSensor.getInstantFlowRate(),
                           flowSensor.getTotalVolume(),
-                          (int)safetySupervisor.getActiveAlarm(),
-                          esp_get_free_heap_size());
+                          flowSensor.getRawPulseCount(),
+                          PIN_FLOW_SENSOR,
+                          flowSensor.getPinLevel());
         }
 
         vTaskDelay(pdMS_TO_TICKS(20)); // 50 Hz control loop

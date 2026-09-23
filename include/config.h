@@ -50,7 +50,7 @@
 // Standard YF-S201: F (Hz) = 7.5 * Q (L/min) -> 450 pulses per Liter
 #define FLOW_CALIBRATION_FACTOR 7.5f     // Pulses/sec per L/min
 #define PULSES_PER_LITER        450.0f   // Total pulses in one liter of water
-#define MIN_PULSE_INTERVAL_US   100      // 100us debounce (supports fast pulse trains & air testing up to 10kHz)
+#define MIN_PULSE_INTERVAL_US   50       // 50us debounce (supports fast pulse trains & air testing up to 20kHz)
 #define FLOW_SAMPLE_PERIOD_MS   500      // Sampling and calculation window (500 ms)
 
 // NVS Persistence Wear-Leveling

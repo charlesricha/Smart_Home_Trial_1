@@ -16,7 +16,7 @@ static volatile uint32_t isr_last_pulse_us = 0;
 void IRAM_ATTR isr_flow_pulse() {
     uint32_t now = (uint32_t)micros();
     // Hardware glitch debounce check
-    if ((now - isr_last_pulse_us) >= MIN_PULSE_INTERVAL_US) {
+    if ((now - isr_last_pulse_us) >= MIN_PULSE_INTERVAL_US || isr_last_pulse_us == 0) {
         portENTER_CRITICAL_ISR(&isrMux);
         isr_pulse_count++;
         isr_last_pulse_us = now;
@@ -40,7 +40,8 @@ FlowSensor::FlowSensor()
 void FlowSensor::begin() {
     // Configure flow sensor input pin with pullup (open-collector Hall sensors require pullup)
     pinMode(PIN_FLOW_SENSOR, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(PIN_FLOW_SENSOR), isr_flow_pulse, RISING);
+    attachInterrupt(digitalPinToInterrupt(PIN_FLOW_SENSOR), isr_flow_pulse, FALLING);
+
 
     // Initialize NVS and load persistent total volume
     prefs.begin(NVS_NAMESPACE, false);
@@ -138,3 +139,16 @@ void FlowSensor::forceCommitNvs() {
     _nvs_dirty = false;
     Serial.printf("[FLOW] NVS committed: Total Volume = %.2f L\n", _total_volume_l);
 }
+
+uint32_t FlowSensor::getRawPulseCount() const {
+    uint32_t p;
+    portENTER_CRITICAL(&isrMux);
+    p = isr_pulse_count;
+    portEXIT_CRITICAL(&isrMux);
+    return p;
+}
+
+uint8_t FlowSensor::getPinLevel() const {
+    return digitalRead(PIN_FLOW_SENSOR);
+}
+

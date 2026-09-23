@@ -45,6 +45,9 @@ public:
     float getTotalVolume() const { return _total_volume_l; }
     bool  isFlowing() const { return _is_flowing; }
     uint32_t getSessionDurationSec() const { return _session_duration_s; }
+    uint32_t getRawPulseCount() const;
+    uint8_t  getPinLevel() const;
+
 
 private:
     float _flow_rate_lpm;
